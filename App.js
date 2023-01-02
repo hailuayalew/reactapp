@@ -1,20 +1,40 @@
-import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View } from 'react-native';
+import React, { useEffect } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import "./App.css";
+import Auth from "./components/Auth";
+import Layout from "./components/Layout";
+import Notification from "./components/Notification";
+import { fetchData, sendCartData } from "./store/cart-actions";
+import { uiActions } from "./store/ui-slice";
+let isFirstRender = true;
+function App() {
+  const dispatch = useDispatch();
+  const notification = useSelector((state) => state.ui.notification);
+  const cart = useSelector((state) => state.cart);
+  const isLoggedIn = useSelector((state) => state.auth.isLoggedIn);
 
-export default function App() {
+  useEffect(() => {
+    dispatch(fetchData());
+  }, [dispatch]);
+  useEffect(() => {
+    if (isFirstRender) {
+      isFirstRender = false;
+      return;
+    }
+
+    if (cart.changed) {
+      dispatch(sendCartData(cart));
+    }
+  }, [cart, dispatch]);
   return (
-    <View style={styles.container}>
-      <Text> sample hello world app helll world</Text>
-      <StatusBar style="auto" />
-    </View>
+    <div className="App">
+      {notification && (
+        <Notification type={notification.type} message={notification.message} />
+      )}
+      {!isLoggedIn && <Auth />}
+      {isLoggedIn && <Layout />}
+    </div>
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-});
+export default App;
